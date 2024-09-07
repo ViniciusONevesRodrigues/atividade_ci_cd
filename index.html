@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Front-end</title>
+</head>
+<body>
+    <h1>Lista de Usuários</h1>
+    <ul id="user-list"></ul>
+
+    <h2>Adicionar Usuário</h2>
+    <input type="text" id="username" placeholder="Nome do usuário">
+    <button onclick="addUser()">Adicionar</button>
+
+    <script>
+        // Função para buscar os usuários do back-end
+        function getUsers() {
+            fetch('http://localhost:3000/api/users')
+                .then(response => response.json())
+                .then(data => {
+                    const userList = document.getElementById('user-list');
+                    userList.innerHTML = ''; // Limpar a lista
+                    data.forEach(user => {
+                        const li = document.createElement('li');
+                        li.textContent = user.name;
+                        userList.appendChild(li);
+                    });
+                })
+                .catch(error => console.error('Erro ao buscar usuários:', error));
+        }
+
+        // Função para adicionar um novo usuário
+        function addUser() {
+            const username = document.getElementById('username').value;
+            fetch('http://localhost:3000/api/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id: Date.now(), name: username }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Usuário adicionado:', data);
+                getUsers(); // Atualizar a lista de usuários
+            })
+            .catch(error => console.error('Erro ao adicionar usuário:', error));
+        }
+
+        // Buscar os usuários ao carregar a página
+        window.onload = getUsers;
+    </script>
+</body>
+</html>

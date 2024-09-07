@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  app:
+    image: paraa1-monitoramentodedoiscontainers-app
+    container_name: app
+    ports:
+      - "3000:3000"
+
+  frontend:
+    image: paraa1-monitoramentodedoiscontainers-frontend
+    container_name: frontend
+    ports:
+      - "80:80"
+
+  nagios:
+    image: jasonrivers/nagios
+    container_name: nagios
+    ports:
+      - "8080:80"
+    environment:
+      NAGIOSADMIN_USER: nagiosadmin
+      NAGIOSADMIN_PASS: nagios
+
+
+  puppetserver:
+    image: puppet/puppetserver
+    container_name: puppetserver
+    hostname: puppet  # Define o hostname como "puppet"
+    ports:
+      - "8140:8140"  # Mantém a porta padrão para evitar problemas
+    volumes:
+      - ./puppet:/etc/puppetlabs/code
+    environment:
+      PUPPETSERVER_JAVA_ARGS: "-Xms512m -Xmx512m"
+
+  puppetagent:
+    image: puppet/puppet-agent
+    container_name: puppetagent
+    depends_on:
+      - puppetserver
+    entrypoint: ["sh", "-c", "sleep 10 && puppet agent --server=puppet --test"]  # Aguarda 10 segundos para garantir que o puppetserver está pronto
+    environment:
+      PUPPET_AGENT_ENVIRONMENT: "production"
+    restart: always
+
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mydatabase
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
